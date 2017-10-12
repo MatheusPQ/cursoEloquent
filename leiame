@@ -1,0 +1,147 @@
+php artisan make:model Post --migration
+    Já cria o model com sua migração
+
+Com a migração pronta
+    php artisan migrate
+
+php artisan tinker
+    $post = new App\Post
+    $post->title='First post'
+    $post->body='this is my ..'
+    $post->type='text'
+    $post->save() //Salva no BD
+    $post //Mostra os dados armazenados
+
+    App\Post::all() //Mostra tds os dados no bd
+
+    App\Post::where('type', 'text')->get()
+        Tds os post do tipo texto
+    
+    App\Post::where('title','First post')->first()
+        Apenas o primeiro registro com first post (?)
+    
+    App\Post::where('type', 'text')->orderBy('created_at', 'desc')->get()
+
+    App\Post::find(1)
+        Busca por id
+    
+    $post = App\Post::find(1)
+    $post->title = 'First'
+    $post->save()
+        Mudando o título
+    
+    $post->delete()
+        Remove o registro
+    
+    App\Post::findOrFail(1)
+        Se não encontrar, da uma mensagem de erro
+    
+    php artisan migrate:reset
+        Para caso vc faça alterações numa migration já rodada.
+        Rodar php artisan migrate em seguida
+    
+    $user = App\User::create(['name' => 'Fulano', 'email' => 'Fulano@gmail.com'])
+        Se necessário, alterar 'strict' para 'false' em config/database.php
+    
+    $user->fresh()
+        Para carregar campos com valores padrão
+    
+    $user = App\User::create(['name' => 'Joao', 'email' => 'joao@gmail.com', 'type' => 'admin'])
+    $user->fresh()
+        Aqui o usuario tenta se definir como admin, mas ñ da certo!
+        Graças ao parâmetro $fillabe dentro das models.
+        Nele, é inserido todos os campos que o model pode receber por mass assignment
+    
+    $post = App\Post::create(['title' => 'awawd'])
+        Precisa definir algo nas models para funcionar
+        Após definir a $fillabe (ou $guarded), esse comando funcionará 
+
+    Eloquent usa um objeto/pacote chamado Carbon
+        Ajuda quando for trabalhar com datas
+        Usado nos timestamps padrão
+
+    $post->published_at
+        Ao apenas definir uma nova timestamp, o tinker vai retornar uma string normal, e nao um objeto Carbon
+    
+    Acessors são funções do model que modificam a info recebida do BD antes de apresentar ao user
+    Mutator modifica a info antes de serem registradas no BD
+
+    Soft deleting não apaga de fato os dados do BD. Ele informa numa coluna a data de 'delete'
+    Ao dar $post->delete() em algum registro e em seguida dar App\Post::all()
+        Vai retornar apenas os registros cuja coluna deleted_at seja nula (isto é, que nao foram deletados)
+        O model só vai trabalhar, então, com registros q não foram excluídos
+    App\Post::withTrashed()->get()
+        Retorna tbm os excluídos
+    App\Post::onlyTrashed()->get()
+        Apenas excluídos
+    $post->trashed()
+        Retorna booleano (true, se foi deletado)
+    $post = App\Post::withTrashed()->find(1)
+    $post->restore()
+        Restora o registro deletado
+
+    $user->config()->create(['notify' => true, 'theme' => 'blue'])
+        Cria um registro relacionado a $user
+    $user->config
+        Mostra o obj config
+    
+    $config = $user->config
+    $config->update(['notify' => false])
+        Atualiza o config
+    $config->fresh()
+
+    $user->config()->save[new App\Config([])
+        Outra forma de criar
+    
+    $post->user()->associate($user)
+        Associa um post a um usuário
+    $post->save()
+    $user->posts
+        Mostra os posts de um usuário
+
+    $user->posts()->create([])
+    $user = App\User::find(1)
+    $user->posts
+        Mostra os posts (incluindo o novo post inserido)
+    
+    $user = App\User::find(1)
+    $post = App\Post::find(1)
+    $post->user()->dissociate($user)
+        Desassocia um post de um usuário
+    $post->save()
+    $user->posts
+        Mostra os posts do usuário
+    
+    MANY TO MANY
+    $post->tags()->attach([1, 2])
+        Envia a ID das tags que quer associar a um Post
+    $post->tags
+
+    $tag = App\Tag::find(1)
+    $tag->posts
+        Posts a qual essa tag está relacionada
+
+    $post->tags()->detach([2])
+        Retira a tag com ID 2 do post
+    $post = App\Post::find(1)
+        'Reinstancia' a var post
+    $post->tags
+
+    $post->tags()->sync([2])
+=>  [
+    "attached" => [
+    2,
+    ],
+    "detached" => [
+    1,
+    ],
+    "updated" => [],
+]
+        Acopla o ID 2 e desacopla todos os outros
+    
+    $tag = $post->tags->first()
+    $tag->pivot->post_id
+        Sei la..
+
+    $post->tags()->sync([1 => ['column1' => 'foo', 'column2' => 'bar'], 2 => ['...']])
+        Sei la..
